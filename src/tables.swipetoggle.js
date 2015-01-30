@@ -25,6 +25,7 @@
 			persistWidths = 'tablesaw-fix-persist',
 			$headerCells = $table.find( "thead th" ),
 			$headerCellsNoPersist = $headerCells.not( '[data-tablesaw-priority="persist"]' ),
+			ignorePersist = false,
 			headerWidths = [],
 			$head = $( document.head || 'head' ),
 			tableId = $table.attr( 'id' ),
@@ -100,9 +101,10 @@
 
 		function getNext(){
 			var next = [],
-				checkFound;
+				checkFound,
+				$methodHeaders = ignorePersist ? $headerCells : $headerCellsNoPersist;
 
-			$headerCellsNoPersist.each(function( i ) {
+			$methodHeaders.each(function( i ) {
 				var $t = $( this ),
 					isHidden = $t.css( "display" ) === "none" || $t.is( ".tablesaw-cell-hidden" );
 
@@ -129,7 +131,8 @@
 		}
 
 		function canAdvance( pair ){
-			return pair[ 1 ] > -1 && pair[ 1 ] < $headerCellsNoPersist.length;
+			var $methodHeaders = ignorePersist ? $headerCells : $headerCellsNoPersist;
+			return pair[ 1 ] > -1 && pair[ 1 ] < $methodHeaders.length;
 		}
 
 		function fakeBreakpoints() {
@@ -139,6 +142,8 @@
 				sum = 0,
 				sums = [],
 				visibleNonPersistantCount = $headerCells.length;
+				
+			ignorePersist = false;
 
 			$headerCells.each(function( index ) {
 				var $t = $( this ),
@@ -157,6 +162,39 @@
 
 			var needsNonPersistentColumn = visibleNonPersistantCount === 0;
 
+
+			if ( needsNonPersistentColumn ) {
+				// treat all cols as non-persistant 
+				
+				//reset variables above 
+				var pens = 0;
+				persist = [];
+				sum = 0;
+				sums = [];
+				visibleNonPersistantCount = $headerCells.length;
+				ignorePersist = true;
+				needsNonPersistentColumn = false;
+				$headerCells.each(function( index ) {
+					var 
+						isPersist = false;
+
+					persist.push( isPersist );
+
+					sum += headerWidths[ index ] + ( isPersist ? 0 : extraPaddingPixels );
+					sums.push( sum );
+
+					// is persistent or is hidden
+					if( isPersist || sum > containerWidth ) {
+						visibleNonPersistantCount--;
+					}
+				});
+
+
+
+			} //if ( needsNonPersistentColumn ) {
+
+
+			
 			$headerCells.each(function( index ) {
 				if( persist[ index ] ) {
 
@@ -181,13 +219,14 @@
 
 		function advance( fwd ){
 			var pair = nextpair( fwd );
+			var $methodHeaders = ignorePersist ? $headerCells : $headerCellsNoPersist;
 			if( canAdvance( pair ) ){
 				if( isNaN( pair[ 0 ] ) ){
 					if( fwd ){
 						pair[0] = 0;
 					}
 					else {
-						pair[0] = $headerCellsNoPersist.length - 1;
+						pair[0] = $methodHeaders.length - 1;
 					}
 				}
 
@@ -195,8 +234,8 @@
 					maintainWidths();
 				}
 
-				hideColumn( $headerCellsNoPersist.get( pair[ 0 ] ) );
-				showColumn( $headerCellsNoPersist.get( pair[ 1 ] ) );
+				hideColumn( $methodHeaders.get( pair[ 0 ] ) );
+				showColumn( $methodHeaders.get( pair[ 1 ] ) );
 
 				$table.trigger( 'tablesawcolumns' );
 			}
