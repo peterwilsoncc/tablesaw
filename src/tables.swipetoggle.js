@@ -166,8 +166,7 @@
 			if ( needsNonPersistentColumn ) {
 				// treat all cols as non-persistant 
 				
-				//reset variables above 
-				var pens = 0;
+				//reset variables above
 				persist = [];
 				sum = 0;
 				sums = [];
@@ -175,8 +174,7 @@
 				ignorePersist = true;
 				needsNonPersistentColumn = false;
 				$headerCells.each(function( index ) {
-					var 
-						isPersist = false;
+					var isPersist = false;
 
 					persist.push( isPersist );
 
